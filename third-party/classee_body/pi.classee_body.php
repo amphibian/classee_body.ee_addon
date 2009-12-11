@@ -24,7 +24,7 @@ class Classee_body
 		$close = ( $attr == 'false' ) ? '' : '"';
 		
 		$segments = count($this->EE->uri->segments);
-		$cat_trigger = $this->EE->config->config['reserved_category_word'];			
+		$cat_trigger = $this->EE->config->item('reserved_category_word');			
 				
 		if($segments > 0)
 		{
