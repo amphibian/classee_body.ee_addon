@@ -2,7 +2,7 @@
 
 $plugin_info = array(
 	'pi_name'			=> 'ClassEE Body',
-	'pi_version'		=> '2.0',
+	'pi_version'		=> '2.0.1',
 	'pi_author'			=> 'Derek Hogue',
 	'pi_author_url'		=> 'http://github.com/amphibian/pi.classee_body.ee2_addon/',
 	'pi_description'	=> 'Applies dynamic classes to your BODY tag.',
@@ -18,142 +18,146 @@ class Classee_body
 				
 		$this->return_data = '';
 		
-		$classes = '';		
 		$attr = $this->EE->TMPL->fetch_param('attr', 'true');
-		$open = ( $attr == 'false' ) ? '' : ' class="';
-		$close = ( $attr == 'false' ) ? '' : '"';
-		
-		$segments = count($this->EE->uri->segments);
+		$browser = strtolower($_SERVER['HTTP_USER_AGENT']);		
 		$cat_trigger = $this->EE->config->item('reserved_category_word');			
+		$classes = array();
+		$disable = ($this->EE->TMPL->fetch_param('disable')) ? 
+			explode('|', $this->EE->TMPL->fetch_param('disable')) : 
+			array();	
+		$group = $this->EE->session->userdata['group_id'];		
+		$segments = count($this->EE->uri->segments);
 				
 		if($segments > 0)
 		{
-			
-			// class per URI segment
-			for($i = 1; $i <= $segments; $i++)
+			// One class per URI segment
+			if(!in_array('segments', $disable))
 			{
-				$seg = $this->EE->uri->segment($i);
-				// Ignore the category indicator
-				if($seg != $cat_trigger)
+				for($i = 1; $i <= $segments; $i++)
 				{
-					// prepend numeric segs
-					$pre = '';
-					if(is_numeric(substr($seg,0,1)))
+					$seg = $this->EE->uri->segment($i);
+					// Ignore the category indicator
+					if($seg != $cat_trigger)
 					{
-						$pre = 'n';
+						$classes[] = (is_numeric(substr($seg,0,1))) ? 'n'.$seg : $seg;
 					}
-					$classes .= $pre . $seg . ' ';
 				}
 			}
 			
 			// Check for pagination
-			if(preg_match('/P{1}[0-9]+/', $this->EE->uri->uri_string) != FALSE)
+			if(!in_array('paged', $disable) && preg_match('/P{1}[0-9]+/', $this->EE->uri->uri_string) != FALSE)
 			{
-				$classes .= 'paged ';
+				$classes[] = 'paged';
 			}
 			
 			// Check for category
-			if(strpos($this->EE->uri->uri_string, "/$cat_trigger/") !== FALSE 
+			if(!in_array('category', $disable) && strpos($this->EE->uri->uri_string, "/$cat_trigger/") !== FALSE 
 				|| preg_match('/C{1}[0-9]+/', $this->EE->uri->uri_string) != FALSE)
 			{
-				$classes .= 'category ';
+				$classes[] = 'category';
 			}
 			
 			// Check for monthly archive
-			if ( $segments >= 2)
+			if(!in_array('monthly', $disable) && $segments >= 2)
 			{
 				$m = $this->EE->uri->segment($segments);
 				$y = $this->EE->uri->segment($segments-1);
 				if(preg_match('/^[0-9]{4}$/', $y) != FALSE && preg_match('/^[0-9]{2}$/', $m) != FALSE)
 				{
-					$classes .= 'monthly ';
+					$classes[] = 'monthly';
 				}
 			}				
 		}
 		else
 		{	
 			// No segs, so we're on the home page
-			$classes .= 'home ';		
+			$classes[] = 'home';		
 		}
 		
-		// class for member group
-		$g = $this->EE->session->userdata['group_id'];
-		
-		switch($g)
-		{
-			case 1:
-				$classes .= 'superadmin ';
-				break;
-			case 2:
-				$classes .= 'banned ';
-				break;
-			case 3:
-				$classes .= 'guest ';
-				break;
-			case 4:
-				$classes .= 'pending ';
-				break;
-			case 5:
-				$classes .= 'member ';
-				break;				
-			case ($g > 5):
-				$classes .= 'groupid_' . $g . ' ';
-				break;
+		// Class for member group
+		if(!in_array('member_group', $disable))
+		{			
+			switch($group)
+			{
+				case 1:
+					$classes[] = 'superadmin';
+					break;
+				case 2:
+					$classes[] = 'banned';
+					break;
+				case 3:
+					$classes[] = 'guest';
+					break;
+				case 4:
+					$classes[] = 'pending';
+					break;
+				case 5:
+					$classes[] = 'member';
+					break;				
+				case ($group > 5):
+					$classes[] = 'groupid_' . $g;
+					break;
+			}
 		}
-		
+				
 		// Some lightweight browser detection
-		$browser = strtolower($_SERVER['HTTP_USER_AGENT']);
-		
-		if(strpos($browser, 'lynx') !== false)
-		{
-			$classes .= 'lynx ';
+		if(!in_array('browser', $disable))
+		{			
+			if(strpos($browser, 'lynx') !== false)
+			{
+				$classes[] = 'lynx';
+			}
+			elseif(strpos($browser, 'chrome') !== false)
+			{
+				$classes[] = 'chrome';
+			}
+			elseif(strpos($browser, 'safari') !== false)
+			{
+				$classes[] = 'safari';
+				$safari = 'y';
+			}
+			elseif(strpos($browser, 'firefox') !== false)
+			{
+				$classes[] = 'firefox';
+			}
+			elseif(strpos($browser, 'gecko') !== false)
+			{
+				$classes[] = 'gecko';
+			}
+			elseif(strpos($browser, 'msie') !== false)
+			{
+				$classes[] = 'ie';
+			}
+			elseif(strpos($browser, 'opera') !== false)
+			{
+				$classes[] = 'opera';
+			}
+			elseif(strpos($browser, 'nav') !== false && strpos($browser, 'mozilla/4.') !== false)
+			{
+				// Haha, Navigator, that's funny.
+				$classes[] = 'navigator';
+			}
+			
+			if (isset($safari) && strpos($browser, 'mobile') !== false )
+			{
+				$classes[] = 'iphone';
+			}
 		}
-		elseif(strpos($browser, 'chrome') !== false)
-		{
-			$classes .= 'chrome ';
-		}
-		elseif(strpos($browser, 'safari') !== false)
-		{
-			$classes .= 'safari ';
-			$safari = 'y';
-		}
-		elseif(strpos($browser, 'firefox') !== false)
-		{
-			$classes .= 'firefox ';
-		}
-		elseif(strpos($browser, 'gecko') !== false)
-		{
-			$classes .= 'gecko ';
-		}
-		elseif(strpos($browser, 'msie') !== false)
-		{
-			$classes .= 'ie ';
-		}
-		elseif(strpos($browser, 'opera') !== false)
-		{
-			$classes .= 'opera ';
-		}
-		elseif(strpos($browser, 'nav') !== false && strpos($browser, 'mozilla/4.') !== false)
-		{
-			$classes .= 'navigator ';
-		}
-		
-		if (isset($safari) && strpos($browser, 'mobile') !== false )
-		{
-			$classes .= 'iphone ';
-		}
-		
+				
 		// Some platform detection		
-		if ( strpos($browser, 'win') !== false)
-		{
-			$classes .= 'win';
-		}
-		elseif(strpos($browser, 'mac') !== false)
-		{
-			$classes .= 'mac';
+		if(!in_array('platform', $disable))
+		{		
+			if (strpos($browser, 'win') !== false)
+			{
+				$classes[] = 'win';
+			}
+			elseif(strpos($browser, 'mac') !== false)
+			{
+				$classes[] = 'mac';
+			}
 		}
 						
-		$this->return_data = $open . $classes . $close;
+		$this->return_data = ($attr == 'false') ? implode(' ', $classes) : ' class="'.implode(' ', $classes).'"';
 	} 
     
     
@@ -199,6 +203,12 @@ If there are no URI segments to be found, your <body> will get the class of "hom
 If you'd like to retreive only the class names, but not the class="" attribute itelf, simply add attr="false" as a parameter:
 
 {exp:classee_body attr="false"}
+
+You can also disable the addition of certain kinds of classes by using a pipe-delimited list within the "disable" parameter:
+
+{exp:classee_body disable="paged|category|monthly"}
+
+Valid values for the "disable" parameter are "segments", "paged", "category", "monthly", "member_group", "browser" and "platform".
 
 <?php
 $buffer = ob_get_contents();
