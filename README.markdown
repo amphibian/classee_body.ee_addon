@@ -32,6 +32,12 @@ If you'd like to retreive only the class names, but not the `class=""` attribute
 
 `{exp:classee_body attr="false"}`
 
+You can also disable the addition of certain kinds of classes by using a pipe-delimited list within the "disable" parameter:
+	
+`{exp:classee_body disable="paged|category|monthly"}`
+	
+Valid values for the "disable" parameter are "segments", "paged", "category", "monthly", "member_group", "browser" and "platform".
+
 ##Compatibility
 
 This version of ClassEE Body is only compatible with ExpressionEngine 2.0 or higher. The ExpressionEngine 1.6-compatible version [can be found here](http://github.com/amphibian/pi.classee_body.ee_addon).
