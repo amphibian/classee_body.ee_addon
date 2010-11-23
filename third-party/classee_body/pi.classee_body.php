@@ -2,7 +2,7 @@
 
 $plugin_info = array(
 	'pi_name'			=> 'ClassEE Body',
-	'pi_version'		=> '2.0.1',
+	'pi_version'		=> '2.0.2',
 	'pi_author'			=> 'Derek Hogue',
 	'pi_author_url'		=> 'http://github.com/amphibian/pi.classee_body.ee2_addon/',
 	'pi_description'	=> 'Applies dynamic classes to your BODY tag.',
@@ -114,7 +114,19 @@ class Classee_body
 			elseif(strpos($browser, 'safari') !== false)
 			{
 				$classes[] = 'safari';
-				$safari = 'y';
+				
+				if(strpos($browser, 'ipod') !== false)
+				{
+					$classes[] = 'ipod';
+				}
+				elseif(strpos($browser, 'iphone') !== false)
+				{
+					$classes[] = 'iphone';
+				}
+				elseif(strpos($browser, 'ipad') !== false)
+				{
+					$classes[] = 'ipad';
+				}				
 			}
 			elseif(strpos($browser, 'firefox') !== false)
 			{
@@ -126,7 +138,30 @@ class Classee_body
 			}
 			elseif(strpos($browser, 'msie') !== false)
 			{
-				$classes[] = 'ie';
+				if(strpos($browser, 'msie 9') !== false)
+				{
+					$classes[] = 'ie9';
+				}
+				elseif(strpos($browser, 'msie 8') !== false)
+				{
+					$classes[] = 'ie8';
+				}
+				elseif(strpos($browser, 'msie 7') !== false)
+				{
+					$classes[] = 'ie7';
+				}	
+				elseif(strpos($browser, 'msie 6') !== false)
+				{
+					$classes[] = 'ie6';
+				}	
+				elseif(strpos($browser, 'msie 5') !== false)
+				{
+					$classes[] = 'ie5';
+				}
+				else
+				{
+					$classes[] = 'ie';
+				}
 			}
 			elseif(strpos($browser, 'opera') !== false)
 			{
@@ -137,11 +172,7 @@ class Classee_body
 				// Haha, Navigator, that's funny.
 				$classes[] = 'navigator';
 			}
-			
-			if (isset($safari) && strpos($browser, 'mobile') !== false )
-			{
-				$classes[] = 'iphone';
-			}
+
 		}
 				
 		// Some platform detection		
