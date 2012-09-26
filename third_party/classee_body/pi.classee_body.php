@@ -2,7 +2,7 @@
 
 $plugin_info = array(
 	'pi_name'			=> 'ClassEE Body',
-	'pi_version'		=> '2.0.3',
+	'pi_version'		=> '2.0.4',
 	'pi_author'			=> 'Derek Hogue',
 	'pi_author_url'		=> 'http://github.com/amphibian/pi.classee_body.ee2_addon/',
 	'pi_description'	=> 'Applies dynamic classes to your BODY tag.',
@@ -19,7 +19,7 @@ class Classee_body
 		$this->return_data = '';
 		
 		$attr = $this->EE->TMPL->fetch_param('attr', 'true');
-		$browser = strtolower($_SERVER['HTTP_USER_AGENT']);		
+		$browser = (isset($_SERVER['HTTP_USER_AGENT'])) ? strtolower($_SERVER['HTTP_USER_AGENT']) : 'unknown';		
 		$cat_trigger = $this->EE->config->item('reserved_category_word');			
 		$classes = array();
 		$disable = ($this->EE->TMPL->fetch_param('disable')) ? 
@@ -101,7 +101,7 @@ class Classee_body
 		}
 				
 		// Some lightweight browser detection
-		if(!in_array('browser', $disable))
+		if(!in_array('browser', $disable) && $browser != 'unknown')
 		{			
 			if(strpos($browser, 'lynx') !== false)
 			{
@@ -138,7 +138,11 @@ class Classee_body
 			}
 			elseif(strpos($browser, 'msie') !== false)
 			{
-				if(strpos($browser, 'msie 9') !== false)
+				if(strpos($browser, 'msie 10') !== false)
+				{
+					$classes[] = 'ie10';
+				}
+				elseif(strpos($browser, 'msie 9') !== false)
 				{
 					$classes[] = 'ie9';
 				}
@@ -176,7 +180,7 @@ class Classee_body
 		}
 				
 		// Some platform detection		
-		if(!in_array('platform', $disable))
+		if(!in_array('platform', $disable) && $browser != 'unknown')
 		{		
 			if (strpos($browser, 'win') !== false)
 			{
