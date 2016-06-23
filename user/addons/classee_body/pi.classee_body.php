@@ -1,33 +1,34 @@
 <?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
+include_once(PATH_THIRD . 'classee_body/addon.setup.php');
+
 $plugin_info = array(
-	'pi_name'			=> 'ClassEE Body',
-	'pi_version'		=> '2.0.4',
-	'pi_author'			=> 'Derek Hogue',
-	'pi_author_url'		=> 'http://github.com/amphibian/pi.classee_body.ee2_addon/',
-	'pi_description'	=> 'Applies dynamic classes to your BODY tag.',
+	'pi_name'			=> CEE_NAME,
+	'pi_version'		=> CEE_VER,
+	'pi_author'			=> CEE_AUTHOR,
+	'pi_author_url'		=> CEE_AUTHOR_URL,
+	'pi_description'	=> CEE_DESC,
 	'pi_usage'			=> Classee_body::usage()
 );
 
 class Classee_body
 {
 
-	function Classee_body()
+	function __construct()
 	{
-		$this->EE =& get_instance();
-				
+
 		$this->return_data = '';
-		
-		$attr = $this->EE->TMPL->fetch_param('attr', 'true');
-		$browser = (isset($_SERVER['HTTP_USER_AGENT'])) ? strtolower($_SERVER['HTTP_USER_AGENT']) : 'unknown';		
-		$cat_trigger = $this->EE->config->item('reserved_category_word');			
+
+		$attr = ee()->TMPL->fetch_param('attr', 'true');
+		$browser = (isset($_SERVER['HTTP_USER_AGENT'])) ? strtolower($_SERVER['HTTP_USER_AGENT']) : 'unknown';
+		$cat_trigger = ee()->config->item('reserved_category_word');
 		$classes = array();
-		$disable = ($this->EE->TMPL->fetch_param('disable')) ? 
-			explode('|', $this->EE->TMPL->fetch_param('disable')) : 
-			array();	
-		$group = $this->EE->session->userdata['group_id'];		
-		$segments = count($this->EE->uri->segments);
-				
+		$disable = (ee()->TMPL->fetch_param('disable')) ?
+			explode('|', ee()->TMPL->fetch_param('disable')) :
+			array();
+		$group = ee()->session->userdata['group_id'];
+		$segments = count(ee()->uri->segments);
+
 		if($segments > 0)
 		{
 			// One class per URI segment
@@ -35,7 +36,7 @@ class Classee_body
 			{
 				for($i = 1; $i <= $segments; $i++)
 				{
-					$seg = $this->EE->uri->segment($i);
+					$seg = ee()->uri->segment($i);
 					// Ignore the category indicator
 					if($seg != $cat_trigger)
 					{
@@ -43,40 +44,40 @@ class Classee_body
 					}
 				}
 			}
-			
+
 			// Check for pagination
-			if(!in_array('paged', $disable) && preg_match('/P{1}[0-9]+/', $this->EE->uri->uri_string) != FALSE)
+			if(!in_array('paged', $disable) && preg_match('/P{1}[0-9]+/', ee()->uri->uri_string) != FALSE)
 			{
 				$classes[] = 'paged';
 			}
-			
+
 			// Check for category
-			if(!in_array('category', $disable) && strpos($this->EE->uri->uri_string, "/$cat_trigger/") !== FALSE 
-				|| preg_match('/C{1}[0-9]+/', $this->EE->uri->uri_string) != FALSE)
+			if(!in_array('category', $disable) && strpos(ee()->uri->uri_string, "/$cat_trigger/") !== FALSE
+				|| preg_match('/C{1}[0-9]+/', ee()->uri->uri_string) != FALSE)
 			{
 				$classes[] = 'category';
 			}
-			
+
 			// Check for monthly archive
 			if(!in_array('monthly', $disable) && $segments >= 2)
 			{
-				$m = $this->EE->uri->segment($segments);
-				$y = $this->EE->uri->segment($segments-1);
+				$m = ee()->uri->segment($segments);
+				$y = ee()->uri->segment($segments-1);
 				if(preg_match('/^[0-9]{4}$/', $y) != FALSE && preg_match('/^[0-9]{2}$/', $m) != FALSE)
 				{
 					$classes[] = 'monthly';
 				}
-			}				
+			}
 		}
 		else
-		{	
+		{
 			// No segs, so we're on the home page
-			$classes[] = 'home';		
+			$classes[] = 'home';
 		}
-		
+
 		// Class for member group
 		if(!in_array('member_group', $disable))
-		{			
+		{
 			switch($group)
 			{
 				case 1:
@@ -93,16 +94,16 @@ class Classee_body
 					break;
 				case 5:
 					$classes[] = 'member';
-					break;				
+					break;
 				case ($group > 5):
 					$classes[] = 'groupid_' . $group;
 					break;
 			}
 		}
-				
+
 		// Some lightweight browser detection
 		if(!in_array('browser', $disable) && $browser != 'unknown')
-		{			
+		{
 			if(strpos($browser, 'lynx') !== false)
 			{
 				$classes[] = 'lynx';
@@ -114,7 +115,7 @@ class Classee_body
 			elseif(strpos($browser, 'safari') !== false)
 			{
 				$classes[] = 'safari';
-				
+
 				if(strpos($browser, 'ipod') !== false)
 				{
 					$classes[] = 'ipod';
@@ -126,7 +127,7 @@ class Classee_body
 				elseif(strpos($browser, 'ipad') !== false)
 				{
 					$classes[] = 'ipad';
-				}				
+				}
 			}
 			elseif(strpos($browser, 'firefox') !== false)
 			{
@@ -153,11 +154,11 @@ class Classee_body
 				elseif(strpos($browser, 'msie 7') !== false)
 				{
 					$classes[] = 'ie7';
-				}	
+				}
 				elseif(strpos($browser, 'msie 6') !== false)
 				{
 					$classes[] = 'ie6';
-				}	
+				}
 				elseif(strpos($browser, 'msie 5') !== false)
 				{
 					$classes[] = 'ie5';
@@ -178,10 +179,10 @@ class Classee_body
 			}
 
 		}
-				
-		// Some platform detection		
+
+		// Some platform detection
 		if(!in_array('platform', $disable) && $browser != 'unknown')
-		{		
+		{
 			if (strpos($browser, 'win') !== false)
 			{
 				$classes[] = 'win';
@@ -191,11 +192,11 @@ class Classee_body
 				$classes[] = 'mac';
 			}
 		}
-						
+
 		$this->return_data = ($attr == 'false') ? implode(' ', $classes) : ' class="'.implode(' ', $classes).'"';
-	} 
-    
-    
+	}
+
+
 // ----------------------------------------
 //  Plugin Usage
 // ----------------------------------------
@@ -203,9 +204,9 @@ class Classee_body
 // This function describes how the plugin is used.
 //  Make sure and use output buffering
 
-function usage()
+static function usage()
 {
-ob_start(); 
+ob_start();
 ?>
 This plugin will apply several dynamic classes to your <body> tag.  Use it like so in your template:
 
@@ -215,7 +216,7 @@ That's it.  You'll now get a classed-up <body> tag using URI segments, the curre
 
 For example, if the current URI was:
 
-http://mydomain.com/magazine/articles/c/politics/P20/ 
+http://mydomain.com/magazine/articles/c/politics/P20/
 
 Your <body> tag would look like this:
 
@@ -247,8 +248,8 @@ Valid values for the "disable" parameter are "segments", "paged", "category", "m
 
 <?php
 $buffer = ob_get_contents();
-	
-ob_end_clean(); 
+
+ob_end_clean();
 
 return $buffer;
 }
