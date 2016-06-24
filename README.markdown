@@ -40,4 +40,4 @@ Valid values for the "disable" parameter are "segments", "paged", "category", "m
 
 ##Compatibility
 
-This version of ClassEE Body is only compatible with ExpressionEngine 2.0 or higher. The ExpressionEngine 1.6-compatible version [can be found here](http://github.com/amphibian/pi.classee_body.ee_addon).
+This version of ClassEE Body is compatible with ExpressionEngine 2.6.0 or higher, and ExpressionEngine 3.0.0 or higher. The ExpressionEngine 1.6-compatible version [can be found here](http://github.com/amphibian/pi.classee_body.ee_addon).
