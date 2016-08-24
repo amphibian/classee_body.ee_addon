@@ -1,13 +1,30 @@
 <?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-include_once(PATH_THIRD . 'classee_body/addon.setup.php');
+/*
+    This file is part of Classee Body add-on for ExpressionEngine.
+
+    Classee Body is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Classee Body is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    Read the terms of the GNU General Public License
+    at <http://www.gnu.org/licenses/>.
+    
+    Copyright 2016 Derek Hogue - http://amphibian.info
+*/
 
 $plugin_info = array(
-	'pi_name'			=> CEE_NAME,
-	'pi_version'		=> CEE_VER,
-	'pi_author'			=> CEE_AUTHOR,
-	'pi_author_url'		=> CEE_AUTHOR_URL,
-	'pi_description'	=> CEE_DESC,
+	'pi_name'			=> 'Classee Body',
+	'pi_version'		=> '2.0.4',
+	'pi_author'			=> 'Derek Hogue',
+	'pi_author_url'		=> 'http://amphibian.info',
+	'pi_description'	=> 'Applies dynamic classes to your BODY tag',
 	'pi_usage'			=> Classee_body::usage()
 );
 
@@ -16,18 +33,18 @@ class Classee_body
 
 	function __construct()
 	{
-
+		$this->EE =& get_instance();
 		$this->return_data = '';
 
-		$attr = ee()->TMPL->fetch_param('attr', 'true');
+		$attr = $this->EE->TMPL->fetch_param('attr', 'true');
 		$browser = (isset($_SERVER['HTTP_USER_AGENT'])) ? strtolower($_SERVER['HTTP_USER_AGENT']) : 'unknown';
-		$cat_trigger = ee()->config->item('reserved_category_word');
+		$cat_trigger = $this->EE->config->item('reserved_category_word');
 		$classes = array();
-		$disable = (ee()->TMPL->fetch_param('disable')) ?
-			explode('|', ee()->TMPL->fetch_param('disable')) :
+		$disable = ($this->EE->TMPL->fetch_param('disable')) ?
+			explode('|', $this->EE->TMPL->fetch_param('disable')) :
 			array();
-		$group = ee()->session->userdata['group_id'];
-		$segments = count(ee()->uri->segments);
+		$group = $this->EE->session->userdata['group_id'];
+		$segments = count($this->EE->uri->segments);
 
 		if($segments > 0)
 		{
@@ -36,7 +53,7 @@ class Classee_body
 			{
 				for($i = 1; $i <= $segments; $i++)
 				{
-					$seg = ee()->uri->segment($i);
+					$seg = $this->EE->uri->segment($i);
 					// Ignore the category indicator
 					if($seg != $cat_trigger)
 					{
@@ -46,14 +63,14 @@ class Classee_body
 			}
 
 			// Check for pagination
-			if(!in_array('paged', $disable) && preg_match('/P{1}[0-9]+/', ee()->uri->uri_string) != FALSE)
+			if(!in_array('paged', $disable) && preg_match('/P{1}[0-9]+/', $this->EE->uri->uri_string) != FALSE)
 			{
 				$classes[] = 'paged';
 			}
 
 			// Check for category
-			if(!in_array('category', $disable) && strpos(ee()->uri->uri_string, "/$cat_trigger/") !== FALSE
-				|| preg_match('/C{1}[0-9]+/', ee()->uri->uri_string) != FALSE)
+			if(!in_array('category', $disable) && strpos($this->EE->uri->uri_string, "/$cat_trigger/") !== FALSE
+				|| preg_match('/C{1}[0-9]+/', $this->EE->uri->uri_string) != FALSE)
 			{
 				$classes[] = 'category';
 			}
@@ -61,8 +78,8 @@ class Classee_body
 			// Check for monthly archive
 			if(!in_array('monthly', $disable) && $segments >= 2)
 			{
-				$m = ee()->uri->segment($segments);
-				$y = ee()->uri->segment($segments-1);
+				$m = $this->EE->uri->segment($segments);
+				$y = $this->EE->uri->segment($segments-1);
 				if(preg_match('/^[0-9]{4}$/', $y) != FALSE && preg_match('/^[0-9]{2}$/', $m) != FALSE)
 				{
 					$classes[] = 'monthly';
@@ -197,63 +214,54 @@ class Classee_body
 	}
 
 
-// ----------------------------------------
-//  Plugin Usage
-// ----------------------------------------
+	static function usage()
+	{
+		ob_start();
+		?>
+		This plugin will apply several dynamic classes to your <body> tag.  Use it like so in your template:
 
-// This function describes how the plugin is used.
-//  Make sure and use output buffering
+		<body{exp:classee_body}>
 
-static function usage()
-{
-ob_start();
-?>
-This plugin will apply several dynamic classes to your <body> tag.  Use it like so in your template:
+		That's it.  You'll now get a classed-up <body> tag using URI segments, the current member group, and type of archive page (category, paged, or monthly).
 
-<body{exp:classee_body}>
+		For example, if the current URI was:
 
-That's it.  You'll now get a classed-up <body> tag using URI segments, the current member group, and type of archive page (category, paged, or monthly).
+		http://mydomain.com/magazine/articles/c/politics/P20/
 
-For example, if the current URI was:
+		Your <body> tag would look like this:
 
-http://mydomain.com/magazine/articles/c/politics/P20/
+		<body class="magazine articles politics category paged P20 superadmin">
 
-Your <body> tag would look like this:
+		(In this case, you'd be logged-in as a SuperAdmin, and your category keyword would be "c".)
 
-<body class="magazine articles politics category paged P20 superadmin">
+		Member groups 1 through 5 will be classed using their group names (superadmin, banned, guest, pending, member), whereas custom member groups will be classed "groupid_N" (N being the member group ID).
 
-(In this case, you'd be logged-in as a SuperAdmin, and your category keyword would be "c".)
+		Numeric URI segments (for example, when calling an entry via its entry_id), and URI segments that begin with a number, will be prepended with the letter "n", i.e.
 
-Member groups 1 through 5 will be classed using their group names (superadmin, banned, guest, pending, member), whereas custom member groups will be classed "groupid_N" (N being the member group ID).
+		http://mydomain.com/magazine/articles/246
 
-Numeric URI segments (for example, when calling an entry via its entry_id), and URI segments that begin with a number, will be prepended with the letter "n", i.e.
+		Would yield:
 
-http://mydomain.com/magazine/articles/246
+		<body class="magazine articles n246 groupid_7">
 
-Would yield:
+		If there are no URI segments to be found, your <body> will get the class of "home".
 
-<body class="magazine articles n246 groupid_7">
+		If you'd like to retreive only the class names, but not the class="" attribute itelf, simply add attr="false" as a parameter:
 
-If there are no URI segments to be found, your <body> will get the class of "home".
+		{exp:classee_body attr="false"}
 
-If you'd like to retreive only the class names, but not the class="" attribute itelf, simply add attr="false" as a parameter:
+		You can also disable the addition of certain kinds of classes by using a pipe-delimited list within the "disable" parameter:
 
-{exp:classee_body attr="false"}
+		{exp:classee_body disable="paged|category|monthly"}
 
-You can also disable the addition of certain kinds of classes by using a pipe-delimited list within the "disable" parameter:
+		Valid values for the "disable" parameter are "segments", "paged", "category", "monthly", "member_group", "browser" and "platform".
 
-{exp:classee_body disable="paged|category|monthly"}
+		<?php
+		$buffer = ob_get_contents();
 
-Valid values for the "disable" parameter are "segments", "paged", "category", "monthly", "member_group", "browser" and "platform".
+		ob_end_clean();
 
-<?php
-$buffer = ob_get_contents();
-
-ob_end_clean();
-
-return $buffer;
+		return $buffer;
+	}
 }
-// END
-}
-// END CLASS
 ?>
