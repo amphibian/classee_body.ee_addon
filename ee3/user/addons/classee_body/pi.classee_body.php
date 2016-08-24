@@ -1,4 +1,4 @@
-<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');s
+<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 /*
     This file is part of Classee Body add-on for ExpressionEngine.
